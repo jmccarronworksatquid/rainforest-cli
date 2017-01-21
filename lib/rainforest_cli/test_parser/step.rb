@@ -7,7 +7,7 @@ class RainforestCli::TestParser::Step < Struct.new(:action, :response, :redirect
   end
 
   def to_s
-    "#{action} --> #{response}"
+    "A:#{action}\nR:#{response}\n"
   end
 
   def has_uploadable_files?

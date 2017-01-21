@@ -27,6 +27,10 @@ class RainforestCli::TestParser::Test < Struct.new(
       browsers: browser_json,
     }
   end
+  
+  def to_s
+    steps.map(&:to_s).inject("") {|x,y| x + y + "\n"}
+  end
 
   def browser_json
     browsers.map do |b|
