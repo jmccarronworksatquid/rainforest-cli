@@ -4,6 +4,7 @@ module RainforestCli::TestParser
   require 'rainforest_cli/test_parser/test'
   require 'rainforest_cli/test_parser/step'
   require 'rainforest_cli/test_parser/embedded_test'
+  require 'rainforest_cli/test_parser/p_test'
 
   class Error < Struct.new(:line, :reason)
     def to_s
@@ -66,7 +67,15 @@ module RainforestCli::TestParser
 
         elsif step_scratch.count == 0 && line.strip != ''
           if line[0] == '-'
-            @test.steps << EmbeddedTest.new(line[1..-1].strip, step_settings_scratch[:redirect])
+            parameter_regex = /(\S+)\s*\((.*)\)/.match(line)
+            unless parameter_regex.nil?
+              # TODO ParameterizedEmbeddedTest
+              rfml_id = parameter_regex[1]
+              params = parameter_regex[2].split(',').map(&:strip)
+              @test.steps << ParameterizedEmbeddedTest.new()#rfml_id, step_settings_scratch[:redirect], params)
+            else
+              @test.steps << EmbeddedTest.new(line[1..-1].strip, step_settings_scratch[:redirect])
+            end
             step_settings_scratch = {}
           else
             step_scratch << line.strip
