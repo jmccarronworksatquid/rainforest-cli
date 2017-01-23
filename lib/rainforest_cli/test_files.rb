@@ -89,7 +89,7 @@ EOF
 
   def get_test_data
     if @options.file_name
-      return expand_parameterized_embeds([RainforestCli::TestParser::Parser.new(@options.file_name).process])
+      return [expand_parameterized_embeds(RainforestCli::TestParser::Parser.new(@options.file_name).process, [])]
     else
       data = []
       if Dir.exist?(@test_folder)
@@ -97,30 +97,25 @@ EOF
           data << RainforestCli::TestParser::Parser.new(file_name).process
         end
       end
-      expand_parameterized_embeds(filter_tests(data))
+      expanded_tests = []
+      data.each do |test|
+        expanded_tests << expand_parameterized_embeds(test, data)
+      end
+      filter_tests(expanded_tests)
     end
   end
   
-  def expand_parameterized_embeds(tests)
-    expanded_tests = []
-    tests.each do |test|
-      expanded_steps = []
-      test.steps.each do |step|
-        if step.type == :parameterized_test
-          # get the referenced test by id
-          ref = tests.select {|t| t.rfml_id == step.rfml_id}
-          # hopefully you don't have a circular dependency
-          unless ref[0].nil?
-            expanded_steps << expand_parameterized_embeds([ref[0]])
-          end
-        else
-          expanded_steps.push(step)
-        end
+  def expand_parameterized_embeds(test, all_tests)
+    expanded_steps = []
+    test.steps.each do |step|
+      if step.type == :parameterized_test
+        expanded_steps += step.expand_to_steps(all_tests)
+      else
+        expanded_steps.push(step)
       end
-      test.steps = expanded_steps
-      expanded_tests.push(test)
     end
-    return expanded_tests
+    test.steps = expanded_steps
+    return test
   end
 
   def filter_tests(tests)
