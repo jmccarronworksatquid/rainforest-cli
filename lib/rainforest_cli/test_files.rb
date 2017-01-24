@@ -3,6 +3,7 @@ require 'securerandom'
 
 class RainforestCli::TestFiles
   DEFAULT_TEST_FOLDER = './spec/rainforest'
+  DEFAULT_PARAMETERIZED_EMBED_FOLDER = './spec/rainforest/parameterized_embedded_tests'
   FILE_EXTENSION = '.rfml'
   SAMPLE_FILE = <<EOF
 #! %s
@@ -19,7 +20,7 @@ This is another step question?
 
 EOF
 
-  attr_reader :test_folder, :test_data
+  attr_reader :test_folder, :test_data, :embed_folder
 
   def initialize(options)
     @options = options
@@ -33,10 +34,21 @@ EOF
     else
       @test_folder = File.expand_path(@options.test_folder)
     end
+    
+    if @options.parameterized_embed_folder.nil?
+      logger.info "No parameterized embed folder supplied. Using default folder: #{DEFAULT_PARAMETERIZED_EMBED_FOLDER}"
+      @embed_folder = File.expand_path(DEFAULT_PARAMETERIZED_EMBED_FOLDER)
+    else
+      @embed_folder = File.expand_path(@options.parameterized_embed_folder)
+    end
   end
 
   def test_paths
     "#{@test_folder}/**/*#{FILE_EXTENSION}"
+  end
+  
+  def embed_paths
+    "#{@embed_folder}/**/*#{FILE_EXTENSION}"
   end
 
   def test_data
@@ -88,18 +100,24 @@ EOF
   private
 
   def get_test_data
+    embedded_test_data = []
+    if Dir.exist?(@embed_folder)
+      Dir.glob(embed_paths) do |file_name|
+        embedded_test_data << RainforestCli::TestParser::Parser.new(file_name).process
+      end
+    end
     if @options.file_name
-      return [expand_parameterized_embeds(RainforestCli::TestParser::Parser.new(@options.file_name).process, [])]
+      return [expand_parameterized_embeds(RainforestCli::TestParser::Parser.new(@options.file_name).process, embedded_test_data)]
     else
-      data = []
+      all_test_data = embedded_test_data
       if Dir.exist?(@test_folder)
         Dir.glob(test_paths) do |file_name|
-          data << RainforestCli::TestParser::Parser.new(file_name).process
+          all_test_data << RainforestCli::TestParser::Parser.new(file_name).process
         end
       end
       expanded_tests = []
-      data.each do |test|
-        expanded_tests << expand_parameterized_embeds(test, data)
+      all_test_data.each do |test|
+        expanded_tests << expand_parameterized_embeds(test, all_test_data)
       end
       filter_tests(expanded_tests)
     end

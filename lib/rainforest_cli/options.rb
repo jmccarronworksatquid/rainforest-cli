@@ -7,7 +7,7 @@ module RainforestCli
     attr_reader :command, :token, :tags, :conflict, :browsers, :site_id, :environment_id,
                 :import_file_name, :import_name, :custom_url, :description, :folder,
                 :debug, :file_name, :test_folder, :embed_tests, :app_source_url, :crowd, :run_id,
-                :junit_file, :overwrite_variable, :single_use_tabular_variable
+                :junit_file, :overwrite_variable, :single_use_tabular_variable, :parameterized_embed_folder
 
     TOKEN_NOT_REQUIRED = %w{new validate}.freeze
 
@@ -113,6 +113,10 @@ module RainforestCli
 
         opts.on('--embed-tests', 'Export tests without expanding embedded test steps') do |_value|
           @embed_tests = true
+        end
+        
+        opts.on('--parameterized-embed-folder FILE_PATH', 'Folder to load parameterized embedded tests from for pre-upload test step expansion. Defaults to spec/rainforest/parameterized_embedded_tests if not set.') do |value|
+          @parameterized_embed_folder = value
         end
 
         opts.on('--app-source-url FILE', 'URL for mobile app download (in beta)') do |value|

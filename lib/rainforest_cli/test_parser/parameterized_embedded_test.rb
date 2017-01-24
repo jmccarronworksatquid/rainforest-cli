@@ -26,6 +26,7 @@ class RainforestCli::TestParser::ParameterizedEmbeddedTest < Struct.new(:rfml_id
     end
     # else
     # TODO error bad embed rfml_id abort!
+    # TODO while we're at it, when uploading a parameterized test we MUST check existing tests for references and upload them as well!
     return steps
   end
   
